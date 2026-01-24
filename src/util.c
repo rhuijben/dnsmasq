@@ -938,7 +938,7 @@ void *whine_malloc_real(const char *func, unsigned int line, size_t size)
   
   if (!ret)
     my_syslog(LOG_ERR, _("failed to allocate %d bytes"), (int) size);
-  else if (option_bool(OPT_LOG_MALLOC))
+  else if (daemon->log_malloc)
     my_syslog(LOG_INFO, _("malloc: %s:%u %zu bytes at %x"), func, line, size, hash_ptr(ret));
 
   return ret;
@@ -951,17 +951,20 @@ void *whine_realloc_real(const char *func, unsigned int line, void *ptr, size_t 
   
   if (!ret)
     my_syslog(LOG_ERR, _("failed to reallocate %d bytes"), (int) size);
-  else if (option_bool(OPT_LOG_MALLOC))
+  else if (daemon->log_malloc)
     my_syslog(LOG_INFO, _("realloc: %s:%u %zu bytes from %x to %x"), func, line, size, old, hash_ptr(ret));
   
   return ret;
 }
 
+#undef free
 void free_real(const char *func, unsigned int line, void *ptr)
 {
-  if (ptr && option_bool(OPT_LOG_MALLOC))
-    my_syslog(LOG_INFO, _("free: %s:%u block at %x"), func, line, hash_ptr(ptr));
+  if (ptr)
+    {
+      if (daemon->log_malloc)
+	my_syslog(LOG_INFO, _("free: %s:%u block at %x"), func, line, hash_ptr(ptr));
   
-#undef free
-  free(ptr);
+      free(ptr);
+    }
 }

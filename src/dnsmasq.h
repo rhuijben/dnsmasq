@@ -1208,6 +1208,7 @@ extern struct daemon {
   int log_fac; /* log facility */
   char *log_file; /* optional log file */
   int max_logs;  /* queue limit */
+  int log_malloc; /* log malloc/realloc/free */
   int randport_limit; /* Maximum number of source ports for query. */
   int cachesize, ftabsize;
   int port, query_port, min_port, max_port;

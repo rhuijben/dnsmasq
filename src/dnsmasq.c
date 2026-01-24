@@ -864,6 +864,9 @@ int main (int argc, char **argv)
     }
 #endif
 
+   /* Don't start logging malloc before logging is set up. */
+  daemon->log_malloc = option_bool(OPT_LOG_MALLOC);
+  
   if (daemon->port == 0)
     my_syslog(LOG_INFO, _("started, version %s DNS disabled"), VERSION);
   else 
