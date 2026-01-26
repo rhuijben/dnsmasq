@@ -1569,8 +1569,8 @@ int tcp_from_udp(time_t now, int status, struct dns_header *header, ssize_t *n,
 		 int class, char *name, struct server *server, 
 		 int *keycount, int *validatecount);
 #endif
-unsigned char *tcp_request(int confd, time_t now,
-			   union mysockaddr *local_addr, struct in_addr netmask, int auth_dns);
+void tcp_request(int confd, time_t now, struct iovec *bigbuff,
+		 union mysockaddr *local_addr, struct in_addr netmask, int auth_dns);
 void server_gone(struct server *server);
 int send_from(int fd, int nowild, char *packet, size_t len, 
 	       union mysockaddr *to, union all_addr *source,
