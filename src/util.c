@@ -757,41 +757,58 @@ int retry_send(ssize_t rc)
    "once" fails on EAGAIN, as this a timeout.
    This indicates a timeout of a TCP socket.
 */
-int read_write(int fd, unsigned char *packet, int size, int rw)
+int read_writev(int fd, struct iovec *iov, int iovcnt, int rw)
 {
-  ssize_t n, done;
-  
-  for (done = 0; done < size; done += n)
-    {
-      if (rw & 1)
-	n = read(fd, &packet[done], (size_t)(size - done));
-      else
-	n = write(fd, &packet[done], (size_t)(size - done));
-      
-      if (n == 0)
-	return 0;
+  int cur = 0;
+  ssize_t n, done = 0;
 
+  while (cur < iovcnt)
+    {
+      iov[cur].iov_len -= done;
+      iov[cur].iov_base =  ((char *)iov[cur].iov_base) + done;
+
+      if (rw & 1)
+	n = readv(fd, &iov[cur], iovcnt - cur);
+      else
+	n = writev(fd, &iov[cur], iovcnt - cur);
+
+      iov[cur].iov_len += done;
+      iov[cur].iov_base = ((char *)iov[cur].iov_base) - done;
+      
       if (n == -1)
 	{
-	  n = 0; /* don't mess with counter when we loop. */
-
 	  if (errno == EINTR || errno == ENOMEM || errno == ENOBUFS)
 	    continue;
-
-	  if (errno == EAGAIN || errno == EWOULDBLOCK)
-	    {
-	      /* "once" variant */
-	      if (rw & 2)
-		return 0;
-
-	      continue;
-	    }
+	  
+	  if (!(rw & 2) && (errno == EAGAIN || errno == EWOULDBLOCK))
+	    continue;
 
 	  return 0;
 	}
+      
+      if (n == 0 && (rw & 1))
+	return 0;
+      
+      done += n;
+      while ((size_t)done >= iov[cur].iov_len)
+	done -= iov[cur++].iov_len;
     }
           
   return 1;
+}
+
+int read_write(int fd, unsigned char *packet, int size, int rw)
+{
+  struct iovec iov;
+
+  /* size == 0 is not an error, just a NOOP. */
+  if (size == 0)
+    return 1;
+  
+  iov.iov_len = (size_t)size;
+  iov.iov_base = packet;
+
+  return read_writev(fd, &iov, 1, rw);
 }
 
 /* close all fds except STDIN, STDOUT and STDERR, spare1, spare2 and spare3 */

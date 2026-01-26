@@ -1527,6 +1527,7 @@ int memcmp_masked(unsigned char *a, unsigned char *b, int len,
 int expand_buf(struct iovec *iov, size_t size);
 char *print_mac(char *buff, unsigned char *mac, int len);
 int read_write(int fd, unsigned char *packet, int size, int rw);
+int read_writev(int fd, struct iovec *iov, int iovcnt, int rw);
 void close_fds(long max_fd, int spare1, int spare2, int spare3);
 int wildcard_match(const char* wildcard, const char* match);
 int wildcard_matchn(const char* wildcard, const char* match, int num);
